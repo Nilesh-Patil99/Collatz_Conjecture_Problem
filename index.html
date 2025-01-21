@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Iteration Calculator</title>
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fc;
+            color: #333;
+            /* display: flex; */
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .head{
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Container for content and chart */
+        .container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        /* Left column - content styling */
+        .content {
+            text-align: center;
+            flex: 1;
+            margin-right: 30px;
+        }
+
+        /* Header styling */
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #4CAF50;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-top: 20px;
+            color: #333;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            margin-top: 10px;
+            color: #555;
+        }
+
+        /* Input and Button styling */
+        label {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        input[type="number"] {
+            padding: 10px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            width: 250px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+            transition: border 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            border: 2px solid #4CAF50;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        /* Output and Step Styling */
+        #steps {
+            margin-top: 20px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+            text-align: left;
+        }
+
+        #iterationCount {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+            margin-top: 20px;
+        }
+
+        /* Step Seperation Styling */
+        .step {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .step-header {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .step-content {
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
+        /* Chart Styling */
+        #chartContainer {
+            flex: 1;
+            max-width: 50%;  /* Shrinking the graph to half width of the page */
+            padding-left: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* justify-content: center; */
+        }
+        .description{
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        canvas {
+            width: 100% !important;  /* Make the canvas width 100% of its container */
+            height: 400px;  /* Fixed height for the graph */
+        }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Ensure the DOM is loaded before running the script
+        window.onload = function() {
+            const ctx = document.getElementById('iterationChart').getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Value Over Iterations',
+                        data: [],
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                        borderWidth: 2,
+                        fill: true,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,  // Ensure the chart maintains aspect ratio while resizing
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Iteration'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Value'
+                            },
+                            min: 0,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+
+            function performIteration() {
+                // Get the input number
+                let number = parseInt(document.getElementById("numberInput").value);
+                let iterationCount = 0;
+                let maxNumber = number;
+                let outputText = "";  // To store the iteration steps
+                let labels = []; // Labels for X axis (iterations)
+                let values = []; // Values for the Y axis
+
+                // Clear previous output
+                document.getElementById("steps").innerHTML = "";
+                document.getElementById("iterationCount").innerHTML = "";
+                document.getElementById("maxNumber").innerHTML = "";
+
+                // Check if the input is a valid number
+                if (isNaN(number) || number <= 0) {
+                    alert("Please enter a positive integer.");
+                    return;
+                }
+
+                // Perform the iterations
+                while (number !== 1) {
+                    iterationCount++;
+
+                    // Add the current step information
+                    outputText += `<div class="step"><div class="step-header">Step ${iterationCount}: Current number is ${number}</div>`;
+                    let stepContent = "";
+
+                      // Update the maximum number if needed
+                      if (number > maxNumber) {
+                        maxNumber = number;
+                    }
+
+                    if (number % 2 === 0) {
+                        // If even, divide by 2
+                        stepContent += `Even number, so we divide by 2. New number = ${number} / 2 = ${number / 2}.`;
+                        number = number / 2;
+                    } else {
+                        // If odd, apply number * 3 + 1
+                        stepContent += `Odd number, so we apply the formula (number * 3 + 1). New number = ${number} * 3 + 1 = ${number * 3 + 1}.`;
+                        number = number * 3 + 1;
+                    }
+
+                    stepContent += `<div class="step-content">Resulting number: ${number}</div></div><br>`;  // Show result after operation
+                    outputText += stepContent;
+
+                    // Push the iteration and number to chart data arrays
+                    labels.push(`Step ${iterationCount}`);
+                    values.push(number);
+                }
+
+                // Final step when number reaches 1
+                outputText += `<div class="step"><div class="step-header">Step ${iterationCount + 1}: Number has reached 1.</div></div>`;
+                // Display the steps and iteration count
+                document.getElementById("steps").innerHTML = outputText;
+                document.getElementById("iterationCount").innerHTML = "Total iterations: " + iterationCount;
+                document.getElementById("maxNumber").innerHTML = `Maximum number encountered: ${maxNumber}`;
+
+                // Update the chart with the new data
+                chart.data.labels = labels;
+                chart.data.datasets[0].data = values;
+                chart.update();
+            }
+
+            // Attach the performIteration function to the button click event
+            document.getElementById("startButton").addEventListener("click", performIteration);
+        }
+    </script>
+</head>
+<body>
+    <div class="head">
+        <h1>Collatz Conjecture Problem</h1>
+    </div>
+    <div class="container">
+        
+        <div class="content">
+            
+            <label for="numberInput">Enter a number:</label>
+            <input type="number" id="numberInput" placeholder="Enter a positive integer" required>
+            <button id="startButton">Start Iteration</button>
+
+            <h2 id="iterationCount"></h2>
+            <h3>Iteration Steps:</h3>
+            <h3 id="maxNumber"></h3>
+            <div id="steps"></div>
+            
+            <div id="output"></div>
+        </div>
+
+        <div id="chartContainer">
+            <canvas id="iterationChart"></canvas>
+            <div class="description">
+                <p>The Collatz conjecture is one of the most famous unsolved problems in mathematics. The conjecture asks whether repeating two simple arithmetic operations will eventually transform every positive integer into 1. It concerns sequences of integers in which each term is obtained from the previous term as follows: if a term is even, the next term is one half of it. If a term is odd, the next term is 3 times the previous term plus 1. The conjecture is that these sequences always reach 1, no matter which positive integer is chosen to start the sequence. The conjecture has been shown to hold for all positive integers up to 2.95×1020, but no general proof has been found.</p>
+            </div>
+            
+        </div>
+    </div>
+</body>
+</html>
